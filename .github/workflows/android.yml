@@ -1,4 +1,4 @@
-name: Build Android APK (Plan B)
+name: Build Android (Plan B)
 on: [push, workflow_dispatch]
 
 jobs:
@@ -13,11 +13,10 @@ jobs:
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
           mv debug.keystore /tmp/debug.keystore
 
-      - name: Export Android
-        # استخدام أداة جاهزة بدلاً من الأوامر اليدوية
+      - name: Build with Firebelly
         uses: firebelly/godot-export@v5.2.1
         with:
-          # تحديد إصدار جودوت بدقة
+          # تحديد روابط التحميل الرسمية لضمان النسخة
           godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip
           godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
           relative_project_path: ./
