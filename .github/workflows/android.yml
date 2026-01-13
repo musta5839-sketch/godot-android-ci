@@ -1,4 +1,4 @@
-name: Build Android (Plan B)
+name: Debug & Build Android
 on: [push, workflow_dispatch]
 
 jobs:
@@ -8,25 +8,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # إنشاء مفتاح التوقيع
       - name: Setup Keystore
         run: |
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
           mv debug.keystore /tmp/debug.keystore
 
+      # خطوة حاسمة: كتابة إعدادات التصدير بمسار واضح جداً (game.apk)
+      - name: Force Export Preset
+        run: |
+          echo '[preset.0]' > export_presets.cfg
+          echo 'name="Android"' >> export_presets.cfg
+          echo 'platform="Android"' >> export_presets.cfg
+          echo 'runnable=true' >> export_presets.cfg
+          echo 'export_path="game.apk"' >> export_presets.cfg
+          echo '[preset.0.options]' >> export_presets.cfg
+          echo 'package/unique_name="com.termux.debug"' >> export_presets.cfg
+          echo 'package/name="Termux Debug"' >> export_presets.cfg
+          echo 'package/signed=true' >> export_presets.cfg
+          echo 'gradle/build_type=1' >> export_presets.cfg
+          echo 'keystore/debug="/tmp/debug.keystore"' >> export_presets.cfg
+          echo 'keystore/debug_user="androiddebugkey"' >> export_presets.cfg
+          echo 'keystore/debug_password="android"' >> export_presets.cfg
+
+      # البناء باستخدام الأداة الذكية
       - name: Build with Firebelly
         uses: firebelly/godot-export@v5.2.1
         with:
-          # تحديد روابط التحميل الرسمية لضمان النسخة
           godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip
           godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
           relative_project_path: ./
-          archive_output: true
-          cache: true
+          archive_output: false
           export_preset_name: Android
           verbose: true
+
+      # --- الخطوة السحرية: عرض الملفات ---
+      # هذا الأمر سيطبع قائمة بكل الملفات في السيرفر
+      # إذا فشل الرفع، سننظر هنا لنعرف اسم الملف الصحيح
+      - name: List All Files (Debug)
+        run: ls -R
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: plan-b-game
-          path: Android.apk
+          name: debug-game-apk
+          path: game.apk
