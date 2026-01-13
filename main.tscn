@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://b4k0r4s2y6l1"]
+[node name="Node2D" type="Node2D"]
+[node name="Label" type="Label" parent="."]
+offset_left = 100.0
+offset_top = 500.0
+offset_right = 600.0
+offset_bottom = 600.0
+text = "SUCCESS!
+APK Built on GitHub Actions"
+horizontal_alignment = 1
+vertical_alignment = 1
