@@ -1,55 +1,35 @@
-name: Debug & Build Android
+name: Final Clean Build
 on: [push, workflow_dispatch]
 
 jobs:
-  export:
+  build:
     runs-on: ubuntu-latest
+    container: barichello/godot-ci:4.2.1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # إنشاء مفتاح التوقيع
+      - name: Fix Icon
+        # التأكد من أن الأيقونة صالحة
+        run: |
+          cat <<EOT > icon.svg
+          <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="128" height="128"><rect width="128" height="128" fill="#20232a" /><circle cx="64" cy="64" r="40" fill="#478cbf" /></svg>
+          EOT
+
       - name: Setup Keystore
         run: |
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
-          mv debug.keystore /tmp/debug.keystore
+          mv debug.keystore /root/debug.keystore
+          sed -i 's|keystore/debug=""|keystore/debug="/root/debug.keystore"|g' export_presets.cfg
+          sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' export_presets.cfg
+          sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' export_presets.cfg
 
-      # خطوة حاسمة: كتابة إعدادات التصدير بمسار واضح جداً (game.apk)
-      - name: Force Export Preset
-        run: |
-          echo '[preset.0]' > export_presets.cfg
-          echo 'name="Android"' >> export_presets.cfg
-          echo 'platform="Android"' >> export_presets.cfg
-          echo 'runnable=true' >> export_presets.cfg
-          echo 'export_path="game.apk"' >> export_presets.cfg
-          echo '[preset.0.options]' >> export_presets.cfg
-          echo 'package/unique_name="com.termux.debug"' >> export_presets.cfg
-          echo 'package/name="Termux Debug"' >> export_presets.cfg
-          echo 'package/signed=true' >> export_presets.cfg
-          echo 'gradle/build_type=1' >> export_presets.cfg
-          echo 'keystore/debug="/tmp/debug.keystore"' >> export_presets.cfg
-          echo 'keystore/debug_user="androiddebugkey"' >> export_presets.cfg
-          echo 'keystore/debug_password="android"' >> export_presets.cfg
+      - name: Build APK
+        # استخدام الوضع الآمن للبناء
+        run: godot --headless --verbose --export-debug "Android" game.apk
 
-      # البناء باستخدام الأداة الذكية
-      - name: Build with Firebelly
-        uses: firebelly/godot-export@v5.2.1
-        with:
-          godot_executable_download_url: https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip
-          godot_export_templates_download_url: https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
-          relative_project_path: ./
-          archive_output: false
-          export_preset_name: Android
-          verbose: true
-
-      # --- الخطوة السحرية: عرض الملفات ---
-      # هذا الأمر سيطبع قائمة بكل الملفات في السيرفر
-      # إذا فشل الرفع، سننظر هنا لنعرف اسم الملف الصحيح
-      - name: List All Files (Debug)
-        run: ls -R
-
-      - name: Upload Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: debug-game-apk
+          name: game-clean-build
           path: game.apk

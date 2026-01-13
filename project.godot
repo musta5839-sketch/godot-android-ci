@@ -1,7 +1,7 @@
 config_version=5
 
 [application]
-config/name="Termux Auto Build"
+config/name="Final Game"
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.2", "Mobile")
 config/icon="res://icon.svg"
@@ -13,15 +13,3 @@ window/handheld/orientation=1
 
 [rendering]
 renderer/rendering_method="mobile"
-
-; Force Build Update
-
-; Force Build Update
-; Force Update Timestamp: Wed Jan 14 00:05:20 EET 2026
-; Path Fix Timestamp: Wed Jan 14 00:24:22 EET 2026
-; FINAL FIX TIMESTAMP: Wed Jan 14 00:27:40 EET 2026
-; FINAL FIX TIMESTAMP: Wed Jan 14 00:31:19 EET 2026
-; TEMPLATE FIX TIMESTAMP: Wed Jan 14 00:37:55 EET 2026
-; Plan B Activated: Wed Jan 14 00:39:38 EET 2026
-; ACTIVATING PLAN B TIMESTAMP: Wed Jan 14 00:40:02 EET 2026
-; DEBUG MODE ACTIVATED: Wed Jan 14 00:40:31 EET 2026
