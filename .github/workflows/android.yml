@@ -9,13 +9,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Keystore
+      # --- الخطوة الجديدة: تنزيل القوالب المفقودة ---
+      - name: Install Export Templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
+          wget -q https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz
+          unzip -q Godot_v4.2.1-stable_export_templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/4.2.1.stable/
+          rm -rf templates Godot_v4.2.1-stable_export_templates.tpz
+
+      # --- إعداد المفاتيح وملف التصدير داخل السيرفر ---
+      - name: Setup Config & Keystore
         run: |
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
-          mv debug.keystore /root/debug.keystore
-          sed -i 's|keystore/debug=""|keystore/debug="/root/debug.keystore"|g' export_presets.cfg
-          sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' export_presets.cfg
-          sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' export_presets.cfg
+          
+          # إنشاء ملف إعدادات جديد تماماً لضمان عدم وجود أخطاء
+          echo '[preset.0]' > export_presets.cfg
+          echo 'name="Android"' >> export_presets.cfg
+          echo 'platform="Android"' >> export_presets.cfg
+          echo 'runnable=true' >> export_presets.cfg
+          echo 'export_path="game.apk"' >> export_presets.cfg
+          echo '[preset.0.options]' >> export_presets.cfg
+          echo 'package/unique_name="com.termux.autobuild"' >> export_presets.cfg
+          echo 'package/name="Termux Game"' >> export_presets.cfg
+          echo 'package/signed=true' >> export_presets.cfg
+          echo 'gradle/build_type=1' >> export_presets.cfg
+          echo 'keystore/debug="debug.keystore"' >> export_presets.cfg
+          echo 'keystore/debug_user="androiddebugkey"' >> export_presets.cfg
+          echo 'keystore/debug_password="android"' >> export_presets.cfg
 
       - name: Build APK
         run: godot --headless --verbose --export-debug "Android" game.apk
@@ -23,5 +44,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: final-game-apk
+          name: termux-game-final
           path: game.apk
