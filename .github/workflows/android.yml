@@ -1,5 +1,5 @@
 name: Build Android APK
-on: [push]
+on: [push, workflow_dispatch]
 
 jobs:
   build-android:
@@ -14,19 +14,18 @@ jobs:
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
           mv debug.keystore /root/debug.keystore
           
-          # حقن مسارات المفتاح في ملف الإعدادات
+          # إعداد مسارات المفتاح
           sed -i 's|keystore/debug=""|keystore/debug="/root/debug.keystore"|g' export_presets.cfg
           sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' export_presets.cfg
           sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' export_presets.cfg
 
-      - name: Create Build Dir
-        run: mkdir -v -p build
-
       - name: Build APK
-        run: godot --headless --verbose --export-debug "Android" build/game.apk
+        # تم تغيير المسار هنا ليكون game.apk مباشرة بدون مجلد build
+        run: godot --headless --verbose --export-debug "Android" game.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: termux-game-apk
-          path: build/game.apk
+          name: final-game-apk
+          # تم تغيير مسار البحث هنا أيضاً
+          path: game.apk
